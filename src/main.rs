@@ -115,23 +115,38 @@ impl App {
 }
 
 fn main() {
+    let bot_account = "whenis";
+
     let mut app = App::new();
     app.add_cal("cals/f1_23.ics".to_string());
+
     let mut conn = Connection::new_dev(&include_str!("../cookie").replace("\n", "")).unwrap();
+
     loop {
         let msg = &conn.read_msg().unwrap();
+
+        // trimming as the data is surrounded by "
         let data: String = msg["data"].to_string().trim_matches('"').to_string();
-        if data.starts_with("whenis") {
-            let rest = data.strip_prefix("whenis ").unwrap().to_string();
+
+        if data.starts_with(bot_account) {
+            let rest = data
+                .strip_prefix(format!("{bot_account} ").as_str())
+                .unwrap()
+                .to_string();
+
             let now = Utc::now();
+
             if let Some((event, dt)) = app.search(rest, now) {
                 let duration = dt.signed_duration_since(now);
                 let formatted_duration = App::format_duration(duration);
+
                 let message = format!("{formatted_duration} until {event}");
+
                 // 300ms is the throtteling threshold
                 // Could be 0 if used with a bot
                 let slep = time::Duration::from_millis(330);
                 thread::sleep(slep);
+
                 &conn.send(&message);
             }
         }
