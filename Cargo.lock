@@ -993,7 +993,7 @@ checksum = "447660ad36a13288b1db4d4248e857b510e8c3a225c822ba4fb748c0aafecffd"
 [[package]]
 name = "wsgg"
 version = "0.1.0"
-source = "git+https://github.com/Oreganon/wsgg.git?branch=main#0244945a0ffb328e81dbaff228cd72589c6c75c7"
+source = "git+https://github.com/Oreganon/wsgg.git?branch=main#162e265dd5c12092db61753448b014111ff5a169"
 dependencies = [
  "serde_json",
  "tungstenite",

@@ -123,7 +123,13 @@ fn main() {
     let mut conn = Connection::new_dev(&include_str!("../cookie").replace("\n", "")).unwrap();
 
     loop {
-        let msg = &conn.read_msg().unwrap();
+        let msg = match conn.read_msg() {
+            Ok(m) => m.clone(),
+            Err(e) => {
+                eprintln!("{e}");
+                continue;
+            },
+        };
 
         // trimming as the data is surrounded by "
         let data: String = msg["data"].to_string().trim_matches('"').to_string();
@@ -144,7 +150,7 @@ fn main() {
 
                 // 300ms is the throtteling threshold
                 // Could be 0 if used with a bot
-                let slep = time::Duration::from_millis(330);
+                let slep = time::Duration::from_millis(500);
                 thread::sleep(slep);
 
                 &conn.send(&message);
