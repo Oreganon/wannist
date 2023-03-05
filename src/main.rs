@@ -2,9 +2,24 @@ use chrono::prelude::*;
 use chrono::{DateTime, Duration, NaiveDateTime};
 use ical::parser::ical::component::IcalCalendar;
 use std::fs::File;
+use std::fs::read_to_string;
 use std::io::BufReader;
 use std::{thread, time};
 use wsgg::Connection;
+use clap::Parser;
+
+/// Calendar app
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+   /// Location of the file containing the cookie for the bot to use
+   #[arg(short, long)]
+   cookie: String,
+
+   /// Use the dev environement (chat2.strims.gg)
+   #[arg(short, long, default_value_t = false)]
+   dev: bool,
+}
 
 struct App {
     cals: Vec<IcalCalendar>,
@@ -117,16 +132,26 @@ impl App {
 fn main() {
     let bot_account = "whenis";
 
+    let args = Args::parse();
+
     let mut app = App::new();
     app.add_cal("cals/f1_23.ics".to_string());
 
-    let mut conn = Connection::new_dev(&include_str!("../cookie").replace("\n", "")).unwrap();
+    let cookie : String = read_to_string(args.cookie).unwrap().parse().unwrap();
+
+    let mut conn = if args.dev {
+        println!("Running in test environement");
+        Connection::new_dev(cookie.as_str()).unwrap()
+    } else {
+        println!("Running in production environement");
+        Connection::new(cookie.as_str()).unwrap()
+    };
 
     loop {
         let msg = match conn.read_msg() {
             Ok(m) => m.clone(),
             Err(e) => {
-                eprintln!("{e}");
+                eprintln!("Error: {e}");
                 continue;
             },
         };

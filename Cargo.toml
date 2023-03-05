@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 chrono = { version = "0.4.23", features = ["clock"] }
+clap = { version = "4.1.8", features = ["derive"] }
 ical = "0.8.0"
 wsgg = { git = "https://github.com/Oreganon/wsgg.git", branch = "main" }
