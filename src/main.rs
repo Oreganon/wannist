@@ -1,24 +1,24 @@
 use chrono::prelude::*;
 use chrono::{DateTime, Duration, NaiveDateTime};
+use clap::Parser;
 use ical::parser::ical::component::IcalCalendar;
-use std::fs::File;
 use std::fs::read_to_string;
+use std::fs::File;
 use std::io::BufReader;
 use std::{thread, time};
-use wsgg::Connection;
-use clap::Parser;
+use wsgg::{ChatMessage, Connection};
 
 /// Calendar app
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-   /// Location of the file containing the cookie for the bot to use
-   #[arg(short, long)]
-   cookie: String,
+    /// Location of the file containing the cookie for the bot to use
+    #[arg(short, long)]
+    cookie: String,
 
-   /// Use the dev environement (chat2.strims.gg)
-   #[arg(short, long, default_value_t = false)]
-   dev: bool,
+    /// Use the dev environement (chat2.strims.gg)
+    #[arg(short, long, default_value_t = false)]
+    dev: bool,
 }
 
 struct App {
@@ -137,7 +137,7 @@ fn main() {
     let mut app = App::new();
     app.add_cal("cals/f1_23.ics".to_string());
 
-    let cookie : String = read_to_string(args.cookie).unwrap().parse().unwrap();
+    let cookie: String = read_to_string(args.cookie).unwrap().parse().unwrap();
 
     let mut conn = if args.dev {
         println!("Running in test environement");
@@ -148,16 +148,15 @@ fn main() {
     };
 
     loop {
-        let msg = match conn.read_msg() {
-            Ok(m) => m.clone(),
+        let msg: ChatMessage = match conn.read_msg() {
+            Ok(m) => m,
             Err(e) => {
                 eprintln!("Error: {e}");
                 continue;
-            },
+            }
         };
 
-        // trimming as the data is surrounded by "
-        let data: String = msg["data"].to_string().trim_matches('"').to_string();
+        let data: String = msg.message.to_string();
 
         if data.starts_with(bot_account) {
             let rest = data
