@@ -36,12 +36,15 @@ impl App {
     }
 
     fn add_cal(&mut self, path: String) {
-        let buf = BufReader::new(File::open(path).unwrap());
+        let buf = BufReader::new(File::open(&path).unwrap());
         let reader = ical::IcalParser::new(buf);
         for cal in reader {
             match cal {
                 Ok(c) => self.cals.push(c),
-                Err(e) => eprintln!("Could not parse calendar: {}", e),
+                Err(e) => eprintln!(
+                    "Could not parse calendar: [file=\"{}\", parse error=\"{}\"]",
+                    path, e
+                ),
             }
         }
     }
