@@ -177,7 +177,10 @@ fn main() {
                 let slep = time::Duration::from_millis(500);
                 thread::sleep(slep);
 
-                &conn.send(&message);
+                match conn.send(&message) {
+                    Err(e) => eprintln!("Error while sending: {e}"),
+                    Ok(_) => {}
+                }
             }
         }
     }
