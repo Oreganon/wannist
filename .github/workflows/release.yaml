@@ -1,0 +1,26 @@
+name: release
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Docker login
+        env:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+        run: docker login https://ghcr.io -u ${username} -p ${password}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ghcr.io/oreganon/wannist:latest
