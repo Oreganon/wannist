@@ -7,7 +7,7 @@ use std::fs::read_to_string;
 use std::fs::File;
 use std::io::BufReader;
 use std::{thread, time};
-use wsgg::{ChatMessage, Connection};
+use wsgg::{ChatMessage, Connection, MessageType, WhisperMessage};
 
 /// Calendar app
 #[derive(Parser, Debug)]
@@ -185,7 +185,7 @@ fn main() {
     };
 
     loop {
-        let msg: ChatMessage = match conn.read_msg() {
+        let msg: MessageType = match conn.read_all() {
             Ok(m) => m,
             Err(e) => {
                 eprintln!("Error: {e}");
@@ -193,30 +193,61 @@ fn main() {
             }
         };
 
-        let data: String = msg.message.to_string();
+        match msg {
+            MessageType::ChatMessage(msg) => {
+                let data: String = msg.message.to_string();
 
-        if data.starts_with(bot_account) {
-            let rest = data
-                .strip_prefix(format!("{bot_account} ").as_str())
-                .unwrap()
-                .to_string();
+                if !data.starts_with(bot_account) {
+                    eprint!("did not start with bot account");
+                    continue;
+                }
 
-            let now = Utc::now();
+                let rest = data
+                    .strip_prefix(format!("{bot_account} ").as_str())
+                    .unwrap()
+                    .to_string();
 
-            if let Some((event, dt)) = app.search(rest, now) {
-                let duration = dt.signed_duration_since(now);
-                let formatted_duration = App::format_duration(duration);
+                let now = Utc::now();
 
-                let message = format!("{formatted_duration} until {event}");
+                if let Some((event, dt)) = app.search(rest, now) {
+                    let duration = dt.signed_duration_since(now);
+                    let formatted_duration = App::format_duration(duration);
 
-                // 300ms is the throtteling threshold
-                // Could be 0 if used with a bot
-                let slep = time::Duration::from_millis(500);
-                thread::sleep(slep);
+                    let message = format!("{formatted_duration} until {event}");
 
-                match conn.send(&message) {
-                    Err(e) => eprintln!("Error while sending: {e}"),
-                    Ok(_) => {}
+                    // 300ms is the throtteling threshold
+                    // Could be 0 if used with a bot
+                    let slep = time::Duration::from_millis(500);
+                    thread::sleep(slep);
+
+                    match conn.send(&message) {
+                        Err(e) => eprintln!("Error while sending: {e}"),
+                        Ok(_) => {}
+                    }
+                } else {
+                    eprintln!("No even found");
+                }
+            }
+            MessageType::WhisperMessage(msg) => {
+                let data: String = msg.message.to_string();
+
+                let now = Utc::now();
+
+                if let Some((event, dt)) = app.search(data, now) {
+                    let duration = dt.signed_duration_since(now);
+                    let formatted_duration = App::format_duration(duration);
+
+                    let message = format!("{formatted_duration} until {event}");
+
+                    // 300ms is the throtteling threshold
+                    // Could be 0 if used with a bot
+                    let slep = time::Duration::from_millis(500);
+                    thread::sleep(slep);
+
+                    match conn.whisper(&msg.sender, &message) {
+                        Err(e) => eprintln!("Error while sending: {e}"),
+                        Ok(_) => {}
+                    }
                 }
             }
         }
