@@ -1,4 +1,4 @@
-FROM rust:1.80 as build
+FROM rust:1.73 as build
 
 # create a new empty shell project
 RUN USER=root cargo new --bin wannist
