@@ -55,7 +55,7 @@ impl App {
         for cal in &self.cals {
             for event in &cal.events {
                 for property in &event.properties {
-                    if property.name != "SUMMARY" {
+                    if property.name != "SUMMARY" && property.name != "DESCRIPTION" {
                         continue;
                     }
 
@@ -272,6 +272,17 @@ mod tests {
         let (res, _) = app.search("qualifying".to_string(), dt).unwrap();
         assert_eq!(res, expected);
     }
+
+    #[test]
+    fn search_descriptions() {
+        let mut app = App::new();
+        app.add_cal("cals/triathlon.ics".to_string());
+        let dt = Utc.with_ymd_and_hms(2023, 3, 4, 13, 0, 0).unwrap(); // `2023-03-04T13:00:00Z`
+        let expected = "🏊 Men's Individual".to_string();
+        let (res, _) = app.search("triathlon".to_string(), dt).unwrap();
+        assert_eq!(res, expected.clone());
+    }
+
     #[test]
     fn search_second_quali() {
         let mut app = App::new();
